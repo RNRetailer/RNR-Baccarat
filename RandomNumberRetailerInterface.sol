@@ -38,6 +38,7 @@ interface RandomNumberRetailerInterface {
     function requestRandomNumbersSynchronousUsingVRFv2Seed(
         uint256 amountOfRandomNumbersToRequest, 
         Proof memory proof, 
-        RequestCommitment memory rc
+        RequestCommitment memory rc,
+        bool payWithRando
     ) external payable returns (uint256[] memory randomNumbersToReturn);
 }
