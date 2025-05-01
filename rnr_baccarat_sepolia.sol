@@ -113,7 +113,7 @@ contract RNRBaccaratSepolia is ReentrancyGuard
     }
 
     // Points to the official RandomNumberRetailer contract.
-    RandomNumberRetailerInterface public constant RANDOM_NUMBER_RETAILER = RandomNumberRetailerInterface(0xd058eA7e3DfE100775Ce954F15bB88257CC10191);
+    RandomNumberRetailerInterface public constant RANDOM_NUMBER_RETAILER = RandomNumberRetailerInterface(0xC235095838e55A28eC57468CEbBFAFB455F363E3);
     
     // Points to RANDO token
     IERC20 randoToken = IERC20(0xf0Be8f2232f1a048Bd6ded29e436c28acd732B04);
@@ -151,7 +151,7 @@ contract RNRBaccaratSepolia is ReentrancyGuard
             "ERROR: Your bet is too large. Please bet less ETH."
         );
 
-        uint256[] memory randomNumbersReturned = RANDOM_NUMBER_RETAILER.requestRandomNumbersSynchronousUsingVRFv2Seed{value: priceOfARandomNumberInWei}(1, proof, rc);
+        uint256[] memory randomNumbersReturned = RANDOM_NUMBER_RETAILER.requestRandomNumbersSynchronousUsingVRFv2Seed{value: priceOfARandomNumberInWei}(1, proof, rc, false);
 
         uint256 randomNumberToUse = randomNumbersReturned[0];
 
@@ -353,7 +353,7 @@ contract Deployer {
       emit ContractDeployed(
         Create2.deploy(
             0, 
-            "RNR Baccarat v0.5 Alpha", 
+            "RNR Baccarat v0.6 Alpha", 
             type(RNRBaccaratSepolia).creationCode
         )
       );
