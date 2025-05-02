@@ -1352,11 +1352,8 @@
 					'handleRevert': true,
 					'value': weiToPay
 				})
-				.on('confirmation', function(confirmationNumber, receipt){
-				    if (confirmationNumber == 1){
-					    alert('play successful!');
-					    console.log(receipt);
-					}
+				.on('receipt', function(receipt){
+					console.log(receipt);
 				})
 				.on('error', function(error, receipt){
 					 console.log(error.message);
