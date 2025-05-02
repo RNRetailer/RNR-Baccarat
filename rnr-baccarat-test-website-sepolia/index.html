@@ -1369,7 +1369,7 @@
 	   <script type="module">
 	       import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/5.2.0/ethers.esm.js";
 	       console.log('imported ethers');
-	       export { ethers };
+	       window.ethers = ethers;
 	       console.log('exported ethers');
 	   </script>
    </body>
