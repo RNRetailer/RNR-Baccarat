@@ -1353,6 +1353,9 @@
 					'value': weiToPay
 				})
 				.on('receipt', function(receipt){
+					const txHash = receipt['transactionHash'];
+					const resultURL = `https://sepolia.etherscan.io/tx/${txHash}#eventlog`;
+					window.open(resultURL, '_blank');
 					console.log(receipt);
 				})
 				.on('error', function(error, receipt){
