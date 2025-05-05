@@ -202,6 +202,44 @@
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "handsPlayedMap",
+		"outputs": [
+			{
+				"internalType": "uint64",
+				"name": "",
+				"type": "uint64"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "handsWonMap",
+		"outputs": [
+			{
+				"internalType": "uint64",
+				"name": "",
+				"type": "uint64"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "largestBetAllowedInWei",
 		"outputs": [
@@ -372,8 +410,85 @@
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "playerIsBannedMap",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "playerPNLMap",
+		"outputs": [
+			{
+				"internalType": "int256",
+				"name": "",
+				"type": "int256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint64",
+				"name": "newBanPlayerIfTheyAreProfitableAfterThisManyHandsOrMore",
+				"type": "uint64"
+			}
+		],
+		"name": "setBanPlayerIfTheyAreProfitableAfterThisManyHandsOrMore",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint64",
+				"name": "newBanPlayerIfTheyAreRNGLuckyAfterThisManyHandsOrMore",
+				"type": "uint64"
+			}
+		],
+		"name": "setBanPlayerIfTheyAreRNGLuckyAfterThisManyHandsOrMore",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint8",
+				"name": "newPercentWinsConsideredRNGLucky",
+				"type": "uint8"
+			}
+		],
+		"name": "setPercentWinsConsideredRNGLucky",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "uint256",
-				"name": "newlargestBetAllowedInWei",
+				"name": "newLargestBetAllowedInWei",
 				"type": "uint256"
 			}
 		],
@@ -395,7 +510,8 @@
 		"stateMutability": "nonpayable",
 		"type": "function"
 	}
-]; 	
+];
+	
 
 
 	const abi = [
@@ -1010,7 +1126,7 @@
 ]; 
 
 		const rnrContractAddress = '0x91B80393Fd73775f48553e4F54C23EdB114463a0';
-		const baccaratContractAddress = '0x50d699931E7aEE0BF6FE7ceaff6e42C4d673fBEA';
+		const baccaratContractAddress = '0x7cF3D3C0FAd9DA7Cdeb7863256686F6ddbE0E89C';
 
 		const chainID = 57054;
 	  
