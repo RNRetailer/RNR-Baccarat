@@ -1442,7 +1442,11 @@
 					'value': weiToPay
 				})
 				.on('receipt', function(receipt){
-					alert(web3.utils.hexToAscii(receipt['logs'][1]['data'].slice(130)).replaceAll('\x00', ''));
+					const betSizeInWeiString = string(betSizeInWei);
+                                        const betSizeInEth = web3.utils.fromWei(betSizeInWei, 'ether');
+					const betSizeInEthString = ` ${betSizeInEth} S`;
+					
+					alert(web3.utils.hexToAscii(receipt['logs'][1]['data'].slice(130)).replaceAll('\x00', '').replace(betSizeInWeiString, betSizeInEthString));
 				})
 				.on('error', function(error, receipt){
 					 console.log(error.message);
