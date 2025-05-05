@@ -27,7 +27,16 @@ contract RNRBaccaratSonic is ReentrancyGuard
 
    Card[]  private deck;
    uint256 public largestBetAllowedInWei;
+   uint64 private banPlayerIfTheyAreProfitableAfterThisManyHandsOrMore = 100;
+   uint64 private banPlayerIfTheyAreRNGLuckyAfterThisManyHandsOrMore = 50;
+   uint8 private percentWinsConsideredRNGLucky = 57;
+
    address public ownerAddress = 0x5F13FF49EF06a108c66D45C2b1F1211dBdE154CD;
+
+   mapping(address => uint64) public handsPlayedMap;
+   mapping(address => uint64) public handsWonMap;
+   mapping(address => int256) public playerPNLMap;
+   mapping(address => bool) public playerIsBannedMap;
 
    constructor() {
         cardValueMapping["2"] = 2;
@@ -110,8 +119,20 @@ contract RNRBaccaratSonic is ReentrancyGuard
         _;
     }
 
-    function setlargestBetAllowedInWei(uint256 newlargestBetAllowedInWei) external onlyOwner{
-        largestBetAllowedInWei = newlargestBetAllowedInWei;
+    function setlargestBetAllowedInWei(uint256 newLargestBetAllowedInWei) external onlyOwner{
+        largestBetAllowedInWei = newLargestBetAllowedInWei;
+    }
+
+    function setBanPlayerIfTheyAreProfitableAfterThisManyHandsOrMore(uint64 newBanPlayerIfTheyAreProfitableAfterThisManyHandsOrMore) external onlyOwner{
+        banPlayerIfTheyAreProfitableAfterThisManyHandsOrMore = newBanPlayerIfTheyAreProfitableAfterThisManyHandsOrMore;
+    }
+
+    function setPercentWinsConsideredRNGLucky(uint8 newPercentWinsConsideredRNGLucky) external onlyOwner{
+        percentWinsConsideredRNGLucky = newPercentWinsConsideredRNGLucky;
+    }
+
+    function setBanPlayerIfTheyAreRNGLuckyAfterThisManyHandsOrMore(uint64 newBanPlayerIfTheyAreRNGLuckyAfterThisManyHandsOrMore) external onlyOwner{
+        banPlayerIfTheyAreRNGLuckyAfterThisManyHandsOrMore = newBanPlayerIfTheyAreRNGLuckyAfterThisManyHandsOrMore;
     }
 
     // Points to the official RandomNumberRetailer contract.
@@ -130,6 +151,11 @@ contract RNRBaccaratSonic is ReentrancyGuard
         RandomNumberRetailerInterface.Proof memory proof, 
         RandomNumberRetailerInterface.RequestCommitment memory rc
     ) external payable nonReentrant returns (Card[] memory playerCards, Card[] memory bankerCards, HandResult result){
+
+        require(
+            !playerIsBannedMap[msg.sender],
+            "ERROR: Player is banned. Player is no longer allowed to use this smart contract."
+        );
 
         uint256 randomNumbersAvailable = RANDOM_NUMBER_RETAILER.randomNumbersAvailable();
         uint256 priceOfARandomNumberInWei = RANDOM_NUMBER_RETAILER.priceOfARandomNumberInWei();
@@ -500,6 +526,8 @@ contract RNRBaccaratSonic is ReentrancyGuard
             
             if (userIsPlayer){
                 payOutToMessageSenderInWei = sizeOfBetInWei * 2;
+
+                handsWonMap[msg.sender] = handsWonMap[msg.sender] + 1;
             }
         }
         else if (bankerHandScore > playerHandScore){
@@ -508,6 +536,8 @@ contract RNRBaccaratSonic is ReentrancyGuard
             if (!userIsPlayer){
                 // 5% tax on wins as banker
                 payOutToMessageSenderInWei = ((sizeOfBetInWei * 95) / 100) + sizeOfBetInWei;
+
+                handsWonMap[msg.sender] = handsWonMap[msg.sender] + 1;
             }
         }
         else {
@@ -521,10 +551,21 @@ contract RNRBaccaratSonic is ReentrancyGuard
                 "Error: Failed to withdraw ETH to the message sender."
             );
         }
+
+        playerPNLMap[msg.sender] = playerPNLMap[msg.sender] + int256(payOutToMessageSenderInWei) - int256(msg.value) + int256(RANDOM_NUMBER_RETAILER.priceOfARandomNumberInWei());
         
         outputResultEvent(playerCards, bankerCards, result, playerHandScore, bankerHandScore, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt);
         
         sendPlayerSomeRandoTokens();
+
+        handsPlayedMap[msg.sender] = handsPlayedMap[msg.sender] + 1;
+
+        if ((handsPlayedMap[msg.sender] >= banPlayerIfTheyAreProfitableAfterThisManyHandsOrMore) && (playerPNLMap[msg.sender] > 0)){
+            playerIsBannedMap[msg.sender] = true;
+        }
+        else if ((handsPlayedMap[msg.sender] >= banPlayerIfTheyAreRNGLuckyAfterThisManyHandsOrMore) && ((((100 * handsWonMap[msg.sender]) / handsPlayedMap[msg.sender])) >= percentWinsConsideredRNGLucky)){
+            playerIsBannedMap[msg.sender] = true;
+        }
 
         return (playerCards, bankerCards, result);
     }
@@ -556,7 +597,7 @@ contract Deployer {
       emit ContractDeployed(
         Create2.deploy(
             0, 
-            "RNR Baccarat v0.92 Alpha", 
+            "RNR Baccarat v0.93 Alpha", 
             type(RNRBaccaratSonic).creationCode
         )
       );
