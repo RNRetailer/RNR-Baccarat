@@ -1442,9 +1442,9 @@
 					'value': weiToPay
 				})
 				.on('receipt', function(receipt){
-					const betSizeInWeiString = string(betSizeInWei);
+					const betSizeInWeiString = String(betSizeInWei);
                                         const betSizeInEth = web3.utils.fromWei(betSizeInWei, 'ether');
-					const betSizeInEthString = ` ${betSizeInEth} S`;
+					const betSizeInEthString = `${betSizeInEth} S`;
 					
 					alert(web3.utils.hexToAscii(receipt['logs'][1]['data'].slice(130)).replaceAll('\x00', '').replace(betSizeInWeiString, betSizeInEthString));
 				})
