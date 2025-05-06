@@ -415,7 +415,7 @@
 				"type": "address"
 			}
 		],
-		"name": "playerIsBannedMap",
+		"name": "playerIsAllowedToPlayMap",
 		"outputs": [
 			{
 				"internalType": "bool",
@@ -493,6 +493,19 @@
 			}
 		],
 		"name": "setlargestBetAllowedInWei",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "playerToWhitelist",
+				"type": "address"
+			}
+		],
+		"name": "whitelistPlayer",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -1126,7 +1139,7 @@
 ]; 
 
 		const rnrContractAddress = '0x91B80393Fd73775f48553e4F54C23EdB114463a0';
-		const baccaratContractAddress = '0x7cF3D3C0FAd9DA7Cdeb7863256686F6ddbE0E89C';
+		const baccaratContractAddress = '0xDF908212d8FD7EFca38E746c56350DA53aFC3271';
 
 		const chainID = 57054;
 	  
