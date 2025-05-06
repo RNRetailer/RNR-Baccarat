@@ -36,7 +36,7 @@ contract RNRBaccaratSonic is ReentrancyGuard
    mapping(address => uint64) public handsPlayedMap;
    mapping(address => uint64) public handsWonMap;
    mapping(address => int256) public playerPNLMap;
-   mapping(address => bool) public playerIsBannedMap;
+   mapping(address => bool) public playerIsAllowedToPlayMap;
 
    constructor() {
         cardValueMapping["2"] = 2;
@@ -119,6 +119,10 @@ contract RNRBaccaratSonic is ReentrancyGuard
         _;
     }
 
+    function whitelistPlayer(address playerToWhitelist) external onlyOwner{
+        playerIsAllowedToPlayMap[playerToWhitelist] = true;
+    }
+
     function setlargestBetAllowedInWei(uint256 newLargestBetAllowedInWei) external onlyOwner{
         largestBetAllowedInWei = newLargestBetAllowedInWei;
     }
@@ -153,8 +157,8 @@ contract RNRBaccaratSonic is ReentrancyGuard
     ) external payable nonReentrant returns (Card[] memory playerCards, Card[] memory bankerCards, HandResult result){
 
         require(
-            !playerIsBannedMap[msg.sender],
-            "ERROR: Player is banned. Player is no longer allowed to use this smart contract."
+            playerIsAllowedToPlayMap[msg.sender],
+            "ERROR: Player is not whitelisted. Player cannot use this smart contract."
         );
 
         uint256 randomNumbersAvailable = RANDOM_NUMBER_RETAILER.randomNumbersAvailable();
@@ -561,10 +565,10 @@ contract RNRBaccaratSonic is ReentrancyGuard
         handsPlayedMap[msg.sender] = handsPlayedMap[msg.sender] + 1;
 
         if ((handsPlayedMap[msg.sender] >= banPlayerIfTheyAreProfitableAfterThisManyHandsOrMore) && (playerPNLMap[msg.sender] > 0)){
-            playerIsBannedMap[msg.sender] = true;
+            playerIsAllowedToPlayMap[msg.sender] = false;
         }
         else if ((handsPlayedMap[msg.sender] >= banPlayerIfTheyAreRNGLuckyAfterThisManyHandsOrMore) && ((((100 * handsWonMap[msg.sender]) / handsPlayedMap[msg.sender])) >= percentWinsConsideredRNGLucky)){
-            playerIsBannedMap[msg.sender] = true;
+            playerIsAllowedToPlayMap[msg.sender] = false;
         }
 
         return (playerCards, bankerCards, result);
@@ -597,7 +601,7 @@ contract Deployer {
       emit ContractDeployed(
         Create2.deploy(
             0, 
-            "RNR Baccarat v0.93 Alpha", 
+            "RNR Baccarat v0.94 Alpha", 
             type(RNRBaccaratSonic).creationCode
         )
       );
