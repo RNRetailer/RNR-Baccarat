@@ -1883,7 +1883,21 @@
 		  }
 
 		  async function testGetProofsAndRequestCommitments(){
- 		      console.log(await getProofsAndRequestCommitments(5));
+ 		      const proofsAndRequestCommitments = await getProofsAndRequestCommitments(5);
+
+		      const metamaskSender = window.ethereumAddresses[0];
+
+		      window.aggregatorContract.methods.executeOneBatchOfTransactions(proofsAndRequestCommitments[0], proofsAndRequestCommitments[1]).send({
+					'from': metamaskSender,
+					'handleRevert': true
+				})
+				.on('receipt', function(receipt){
+					alert('Tx submitted successfully!');
+				})
+				.on('error', function(error, receipt){
+			                console.log(error.message);
+				        alert('Tx failed. Please try again.');
+				});
 		  }
 		  
 	  </script>
