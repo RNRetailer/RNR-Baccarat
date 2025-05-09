@@ -13,7 +13,7 @@ enum HandResult{ PLAYER_WIN, BANKER_WIN, DRAW }
 
 //event HandPlayed(address indexed player, bool userIsPlayer, HandResult result, uint256 sizeOfBetInWei, Card[] playerCards, Card[] bankerCards, uint8 playerHandScore, uint8 bankerHandScore);
 
-event HandLog(string handLog);
+event HandLog(address indexed userAddress, string handLog);
 
 struct Card{
     string cardValue;
@@ -32,6 +32,7 @@ contract RNRBaccaratSonic is ReentrancyGuard
    uint8 private percentWinsConsideredRNGLucky = 57;
 
    address public ownerAddress = 0x5F13FF49EF06a108c66D45C2b1F1211dBdE154CD;
+   address public aggregatorAddress;
 
    mapping(address => uint64) public handsPlayedMap;
    mapping(address => uint64) public handsWonMap;
@@ -119,6 +120,19 @@ contract RNRBaccaratSonic is ReentrancyGuard
         _;
     }
 
+    modifier onlyAggregator() {
+        require(
+            msg.sender == aggregatorAddress, 
+            "FAILURE: Only the aggregator can call this method."
+        );
+
+        _;
+    }
+
+    function setAggregatorAddress(address newAggregatorAddress) external onlyOwner{
+        aggregatorAddress = newAggregatorAddress;
+    }
+
     function whitelistPlayer(address playerToWhitelist) external onlyOwner{
         playerIsAllowedToPlayMap[playerToWhitelist] = true;
     }
@@ -150,42 +164,21 @@ contract RNRBaccaratSonic is ReentrancyGuard
          randoToken.transfer(msg.sender, tokensToSend);
     }
 
-    function play(
+    function playAsAggregator(
+        bool userIsPlayer, 
+        RandomNumberRetailerInterface.Proof memory proof, 
+        RandomNumberRetailerInterface.RequestCommitment memory rc,
+        address userAddress) external payable onlyAggregator nonReentrant returns (Card[] memory playerCards, Card[] memory bankerCards, HandResult result){
+
+        return play(userIsPlayer, proof, rc, userAddress);
+    }
+
+    function playAsWhitelistedUser(
         bool userIsPlayer, 
         RandomNumberRetailerInterface.Proof memory proof, 
         RandomNumberRetailerInterface.RequestCommitment memory rc
     ) external payable nonReentrant returns (Card[] memory playerCards, Card[] memory bankerCards, HandResult result){
-
-        require(
-            playerIsAllowedToPlayMap[msg.sender],
-            "ERROR: Player is not whitelisted. Player cannot use this smart contract."
-        );
-
-        uint256 randomNumbersAvailable = RANDOM_NUMBER_RETAILER.randomNumbersAvailable();
-        uint256 priceOfARandomNumberInWei = RANDOM_NUMBER_RETAILER.priceOfARandomNumberInWei();
-
-        require(
-            randomNumbersAvailable > 0, 
-            "ERROR: RNR is out of random numbers. Please try again later."
-        );
-
-        uint256 amountToBetWithInWei = msg.value - priceOfARandomNumberInWei;
-
-        require(
-            amountToBetWithInWei > 0,
-            "ERROR: You did not send enough ETH to pay for the RNR random number. Please send more ETH next time."
-        );
-
-        require(
-            amountToBetWithInWei <= largestBetAllowedInWei,
-            "ERROR: Your bet is too large. Please bet less ETH."
-        );
-
-        uint256[] memory randomNumbersReturned = RANDOM_NUMBER_RETAILER.requestRandomNumbersSynchronousUsingVRFv2Seed{value: priceOfARandomNumberInWei}(1, proof, rc, false);
-
-        uint256 randomNumberToUse = randomNumbersReturned[0];
-
-        return playImpl(amountToBetWithInWei, userIsPlayer, randomNumberToUse);
+        return play(userIsPlayer, proof, rc, msg.sender);
     }
     
     function shuffleDeck(uint256 randomNumber) private {
@@ -220,10 +213,49 @@ contract RNRBaccaratSonic is ReentrancyGuard
     	}
     }
 
-    function playImpl(
-        uint256 sizeOfBetInWei,
+    function play(
         bool userIsPlayer,
-        uint256 randomNumberToUse
+        RandomNumberRetailerInterface.Proof memory proof,
+        RandomNumberRetailerInterface.RequestCommitment memory rc,
+        address userAddress
+    ) private returns (Card[] memory playerCards, Card[] memory bankerCards, HandResult result){
+        require(
+            playerIsAllowedToPlayMap[msg.sender],
+            "ERROR: Player is not whitelisted. Player cannot use this smart contract."
+        );
+
+        uint256 randomNumbersAvailable = RANDOM_NUMBER_RETAILER.randomNumbersAvailable();
+        uint256 priceOfARandomNumberInWei = RANDOM_NUMBER_RETAILER.priceOfARandomNumberInWei();
+
+        require(
+            randomNumbersAvailable > 0, 
+            "ERROR: RNR is out of random numbers. Please try again later."
+        );
+
+        uint256 sizeOfBetInWei = msg.value - priceOfARandomNumberInWei;
+
+        require(
+            sizeOfBetInWei > 0,
+            "ERROR: You did not send enough ETH to pay for the RNR random number. Please send more ETH next time."
+        );
+
+        require(
+            sizeOfBetInWei <= largestBetAllowedInWei,
+            "ERROR: Your bet is too large. Please bet less ETH."
+        );
+
+        uint256[] memory randomNumbersReturned = RANDOM_NUMBER_RETAILER.requestRandomNumbersSynchronousUsingVRFv2Seed{value: priceOfARandomNumberInWei}(1, proof, rc, false);
+
+        uint256 randomNumberToUse = randomNumbersReturned[0];
+
+        return playImpl(userIsPlayer, randomNumberToUse, sizeOfBetInWei, userAddress);
+    }
+
+    function playImpl(
+        bool userIsPlayer,
+        uint256 randomNumberToUse,
+        uint256 sizeOfBetInWei,
+        address userAddress
     ) private returns (Card[] memory playerCards, Card[] memory bankerCards, HandResult result){
         
         playerCards = new Card[](3);
@@ -251,7 +283,7 @@ contract RNRBaccaratSonic is ReentrancyGuard
         
         // if anybody gets a natural stand, no further cards are drawn
         if (playerHandScore == 8 || playerHandScore == 9 || bankerHandScore == 8 || bankerHandScore == 9){
-            return finishGame(playerCards, bankerCards, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt);
+            return finishGame(playerCards, bankerCards, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt, userAddress);
         }
         
         // player draws a third card with a total less than 6, stands on 6-7, natural stands on 8-9
@@ -261,7 +293,7 @@ contract RNRBaccaratSonic is ReentrancyGuard
             numberOfPlayerCardsDelt++;
         }
         else if (playerHandScore == 8 || playerHandScore == 9){
-            return finishGame(playerCards, bankerCards, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt);
+            return finishGame(playerCards, bankerCards, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt, userAddress);
         }
  
         // banker draws a third card with a total less than 3, stands on 7, natural stands on 8-9
@@ -274,7 +306,7 @@ contract RNRBaccaratSonic is ReentrancyGuard
             // otherwise, the banker uses this logic:
             
             if (!playerDrewThirdCard){
-                return finishGame(playerCards, bankerCards, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt);
+                return finishGame(playerCards, bankerCards, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt, userAddress);
             }
             
             uint8 playerThirdCardValue = cardValueMapping[playerCards[2].cardValue];
@@ -316,7 +348,7 @@ contract RNRBaccaratSonic is ReentrancyGuard
             }
         }
         
-        return finishGame(playerCards, bankerCards, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt);
+        return finishGame(playerCards, bankerCards, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt, userAddress);
     }
 
     function log10(uint256 value) internal pure returns (uint256) {
@@ -397,7 +429,7 @@ contract RNRBaccaratSonic is ReentrancyGuard
         );
     }
 
-    function outputResultEvent(Card[] memory playerCards, Card[] memory bankerCards, HandResult result, uint8 playerHandScore, uint8 bankerHandScore, bool userIsPlayer, uint256 sizeOfBetInWei, uint8 numberOfPlayerCardsDelt, uint8 numberOfBankerCardsDelt) private{
+    function outputResultEvent(Card[] memory playerCards, Card[] memory bankerCards, HandResult result, uint8 playerHandScore, uint8 bankerHandScore, bool userIsPlayer, uint256 sizeOfBetInWei, uint8 numberOfPlayerCardsDelt, uint8 numberOfBankerCardsDelt, address userAddress) private{
         string memory handResultString;
 
         // is user player or banker
@@ -507,7 +539,7 @@ contract RNRBaccaratSonic is ReentrancyGuard
             );
         }
 
-        emit HandLog(handResultString);
+        emit HandLog(userAddress, handResultString);
 
     }
     
@@ -517,7 +549,8 @@ contract RNRBaccaratSonic is ReentrancyGuard
         bool userIsPlayer,
         uint256 sizeOfBetInWei, 
         uint8 numberOfPlayerCardsDelt, 
-        uint8 numberOfBankerCardsDelt
+        uint8 numberOfBankerCardsDelt,
+        address userAddress
     )   private returns (Card[] memory, Card[] memory, HandResult result){
      
         uint8 playerHandScore = calculateHandScore(playerCards);
@@ -531,7 +564,7 @@ contract RNRBaccaratSonic is ReentrancyGuard
             if (userIsPlayer){
                 payOutToMessageSenderInWei = sizeOfBetInWei * 2;
 
-                handsWonMap[msg.sender] = handsWonMap[msg.sender] + 1;
+                handsWonMap[userAddress] = handsWonMap[userAddress] + 1;
             }
         }
         else if (bankerHandScore > playerHandScore){
@@ -541,7 +574,7 @@ contract RNRBaccaratSonic is ReentrancyGuard
                 // 5% tax on wins as banker
                 payOutToMessageSenderInWei = ((sizeOfBetInWei * 95) / 100) + sizeOfBetInWei;
 
-                handsWonMap[msg.sender] = handsWonMap[msg.sender] + 1;
+                handsWonMap[userAddress] = handsWonMap[userAddress] + 1;
             }
         }
         else {
@@ -551,24 +584,24 @@ contract RNRBaccaratSonic is ReentrancyGuard
         
         if(payOutToMessageSenderInWei != 0){
             require(
-                payable(msg.sender).send(payOutToMessageSenderInWei),
+                payable(userAddress).send(payOutToMessageSenderInWei),
                 "Error: Failed to withdraw ETH to the message sender."
             );
         }
 
-        playerPNLMap[msg.sender] = playerPNLMap[msg.sender] + int256(payOutToMessageSenderInWei) - int256(msg.value) + int256(RANDOM_NUMBER_RETAILER.priceOfARandomNumberInWei());
+        playerPNLMap[userAddress] = playerPNLMap[userAddress] + int256(payOutToMessageSenderInWei) - int256(msg.value) + int256(RANDOM_NUMBER_RETAILER.priceOfARandomNumberInWei());
         
-        outputResultEvent(playerCards, bankerCards, result, playerHandScore, bankerHandScore, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt);
+        outputResultEvent(playerCards, bankerCards, result, playerHandScore, bankerHandScore, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt, userAddress);
         
         sendPlayerSomeRandoTokens();
 
-        handsPlayedMap[msg.sender] = handsPlayedMap[msg.sender] + 1;
+        handsPlayedMap[userAddress] = handsPlayedMap[userAddress] + 1;
 
-        if ((handsPlayedMap[msg.sender] >= banPlayerIfTheyAreProfitableAfterThisManyHandsOrMore) && (playerPNLMap[msg.sender] > 0)){
-            playerIsAllowedToPlayMap[msg.sender] = false;
+        if ((handsPlayedMap[userAddress] >= banPlayerIfTheyAreProfitableAfterThisManyHandsOrMore) && (playerPNLMap[userAddress] > 0)){
+            playerIsAllowedToPlayMap[userAddress] = false;
         }
-        else if ((handsPlayedMap[msg.sender] >= banPlayerIfTheyAreRNGLuckyAfterThisManyHandsOrMore) && ((((100 * handsWonMap[msg.sender]) / handsPlayedMap[msg.sender])) >= percentWinsConsideredRNGLucky)){
-            playerIsAllowedToPlayMap[msg.sender] = false;
+        else if ((handsPlayedMap[userAddress] >= banPlayerIfTheyAreRNGLuckyAfterThisManyHandsOrMore) && ((((100 * handsWonMap[userAddress]) / handsPlayedMap[userAddress])) >= percentWinsConsideredRNGLucky)){
+            playerIsAllowedToPlayMap[userAddress] = false;
         }
 
         return (playerCards, bankerCards, result);
@@ -601,7 +634,7 @@ contract Deployer {
       emit ContractDeployed(
         Create2.deploy(
             0, 
-            "RNR Baccarat v0.94 Alpha", 
+            "RNR Baccarat v0.97 Alpha", 
             type(RNRBaccaratSonic).creationCode
         )
       );
