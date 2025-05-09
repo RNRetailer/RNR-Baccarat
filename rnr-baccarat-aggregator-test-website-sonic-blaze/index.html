@@ -1752,6 +1752,24 @@
 			}
 		}
 
+	        function pullIntFromSecp256k1Part(part){
+			const closingBracketIndex = part.indexOf('}');
+			const hexString = '0x' + part.substring(0, closingBracketIndex);
+			
+			return web3.utils.hexToNumber(
+			    hexString
+			);
+		}
+		
+		function convertSecp256k1To2TupleOfInts(secpString){
+		    const parts = secpString.split('{');
+			
+			return [
+				pullIntFromSecp256k1Part(parts[2]),
+				pullIntFromSecp256k1Part(parts[3])
+			];
+		}
+
 	        async function getRandomNumberFromWASM(metamaskSender, randomSeedArrayLength, latestBlockNumber) {
          		
 		        showLoadingGif();
