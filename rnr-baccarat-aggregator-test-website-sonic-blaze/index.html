@@ -1887,7 +1887,38 @@
 
 		      const metamaskSender = window.ethereumAddresses[0];
 
-		      window.aggregatorContract.methods.executeOneBatchOfTransactions(proofsAndRequestCommitments[0], proofsAndRequestCommitments[1]).send({
+		      async function preflightCheckFunction(fn, params){
+			    try {
+			      await fn.call(params);
+			      return true;
+			    } catch (callError) {
+
+			      console.error("Transaction will fail:", callError);
+
+			      if (callError.message) {
+			        console.error(
+			          "Revert reason:",
+			          callError.message
+			         )
+			      }
+
+			      return false;
+			    }
+		      }
+
+		      //Preflight check
+		      let preflightCheck = await preflightCheckFunction(
+			  window.aggregatorContract.methods.executeOneBatchOfTransactions(proofsAndRequestCommitments[0], proofsAndRequestCommitments[1]),
+			  {
+			    from: metamaskSender,
+			  }
+			);
+
+		      if (preflightCheck === false) {
+			   alert("Error processing tx, check console");
+		      }
+		      else{
+		      		window.aggregatorContract.methods.executeOneBatchOfTransactions(proofsAndRequestCommitments[0], proofsAndRequestCommitments[1]).send({
 					'from': metamaskSender,
 					'handleRevert': true
 				})
@@ -1898,6 +1929,7 @@
 			                console.log(error.message);
 				        alert('Tx failed. Please try again.');
 				});
+		     }
 		  }
 		  
 	  </script>
