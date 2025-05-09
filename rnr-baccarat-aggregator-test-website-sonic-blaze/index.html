@@ -1554,8 +1554,8 @@
 ]; 
 
 		const rnrContractAddress = '0x91B80393Fd73775f48553e4F54C23EdB114463a0';
-		const baccaratContractAddress = '0x5D23A18De07C361ed61b0586fe495A3aED9C8bc7';
-                const underlyingBaccaratContractAddress = '0x55c1835959E5C5B8100b52DFb6fE51A3A7586a08';
+		const aggregatorContractAddress = '0xaE143651468f7F3c9cadf949a9191a1e1ED1af5e';
+                const underlyingBaccaratContractAddress = '0x67955786F1594541bC8E656e9E071219Eb80Dae3';
 
 		const chainID = 57054;
 	  
@@ -1565,7 +1565,7 @@
 			window.web3 = new Web3(window.ethereum);
 			await switchNetwork(chainID);
 			window.rnrContract = new window.web3.eth.Contract(abi, rnrContractAddress);
-			window.baccaratContract = new window.web3.eth.Contract(baccaratContractABI, baccaratContractAddress, {handleRevert: true});
+			window.aggregatorContract = new window.web3.eth.Contract(baccaratContractABI, aggregatorContractAddress, {handleRevert: true});
                         window.underlyingBaccaratContract = new window.web3.eth.Contract(underlyingBaccaratContractABI, underlyingBaccaratContractAddress, {handleRevert: true});
 			$('#connectWalletButtonHolder').css('display', 'none');
 			return true;
@@ -1628,7 +1628,7 @@
 			   window.web3 = new Web3(window.ethereum);
 				await switchNetwork(chainID);
 			   window.rnrContract = new window.web3.eth.Contract(abi, rnrContractAddress);
-			   window.baccaratContract = new window.web3.eth.Contract(baccaratContractABI, baccaratContractAddress, {handleRevert: true});
+			   window.aggregatorContract = new window.web3.eth.Contract(baccaratContractABI, aggregatorContractAddress, {handleRevert: true});
                            window.underlyingBaccaratContract = new window.web3.eth.Contract(underlyingBaccaratContractABI, underlyingBaccaratContractAddress, {handleRevert: true});
 		    }
 			else {
@@ -1724,7 +1724,7 @@
 
 			//Preflight check
 			let preflightCheck = await preflightCheckFunction(
-			  window.baccaratContract.methods.playBaccarat(userIsPlayer),
+			  window.aggregatorContract.methods.playBaccarat(userIsPlayer),
 
 			  {
 			    from: metamaskSender,
@@ -1736,7 +1736,7 @@
 			   alert("Error processing tx, check console");
 			}
 			else{
-				window.baccaratContract.methods.playBaccarat(userIsPlayer).send({
+				window.aggregatorContract.methods.playBaccarat(userIsPlayer).send({
 					'from': metamaskSender,
 					'handleRevert': true,
 					'value': weiToPay
