@@ -1882,8 +1882,8 @@
 		      return [proofs, requestCommitments];
 		  }
 
-		  async function testGetProofsAndRequestCommitments(){
- 		      const proofsAndRequestCommitments = await getProofsAndRequestCommitments(5);
+		  async function testExecuteOneBatchOfTransactions(numberOfProofsToFulfill){
+ 		      const proofsAndRequestCommitments = await getProofsAndRequestCommitments(numberOfProofsToFulfill);
 
 		      const metamaskSender = window.ethereumAddresses[0];
 
