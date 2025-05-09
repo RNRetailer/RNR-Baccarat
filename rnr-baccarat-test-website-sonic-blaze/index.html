@@ -153,6 +153,12 @@
 		"anonymous": false,
 		"inputs": [
 			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "userAddress",
+				"type": "address"
+			},
+			{
 				"indexed": false,
 				"internalType": "string",
 				"name": "handLog",
@@ -168,6 +174,19 @@
 		"outputs": [
 			{
 				"internalType": "contract RandomNumberRetailerInterface",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "aggregatorAddress",
+		"outputs": [
+			{
+				"internalType": "address",
 				"name": "",
 				"type": "address"
 			}
@@ -360,9 +379,156 @@
 				"internalType": "struct RandomNumberRetailerInterface.RequestCommitment",
 				"name": "rc",
 				"type": "tuple"
+			},
+			{
+				"internalType": "address",
+				"name": "userAddress",
+				"type": "address"
 			}
 		],
-		"name": "play",
+		"name": "playAsAggregator",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "cardValue",
+						"type": "string"
+					},
+					{
+						"internalType": "enum Suit",
+						"name": "suit",
+						"type": "uint8"
+					}
+				],
+				"internalType": "struct Card[]",
+				"name": "playerCards",
+				"type": "tuple[]"
+			},
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "cardValue",
+						"type": "string"
+					},
+					{
+						"internalType": "enum Suit",
+						"name": "suit",
+						"type": "uint8"
+					}
+				],
+				"internalType": "struct Card[]",
+				"name": "bankerCards",
+				"type": "tuple[]"
+			},
+			{
+				"internalType": "enum HandResult",
+				"name": "result",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bool",
+				"name": "userIsPlayer",
+				"type": "bool"
+			},
+			{
+				"components": [
+					{
+						"internalType": "uint256[2]",
+						"name": "pk",
+						"type": "uint256[2]"
+					},
+					{
+						"internalType": "uint256[2]",
+						"name": "gamma",
+						"type": "uint256[2]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "c",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "s",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "seed",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "uWitness",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256[2]",
+						"name": "cGammaWitness",
+						"type": "uint256[2]"
+					},
+					{
+						"internalType": "uint256[2]",
+						"name": "sHashWitness",
+						"type": "uint256[2]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "zInv",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct RandomNumberRetailerInterface.Proof",
+				"name": "proof",
+				"type": "tuple"
+			},
+			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "blockNum",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint256",
+						"name": "subId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint32",
+						"name": "callbackGasLimit",
+						"type": "uint32"
+					},
+					{
+						"internalType": "uint32",
+						"name": "numWords",
+						"type": "uint32"
+					},
+					{
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"internalType": "bytes",
+						"name": "extraArgs",
+						"type": "bytes"
+					}
+				],
+				"internalType": "struct RandomNumberRetailerInterface.RequestCommitment",
+				"name": "rc",
+				"type": "tuple"
+			}
+		],
+		"name": "playAsWhitelistedUser",
 		"outputs": [
 			{
 				"components": [
@@ -443,6 +609,19 @@
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newAggregatorAddress",
+				"type": "address"
+			}
+		],
+		"name": "setAggregatorAddress",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -1437,7 +1616,7 @@
 
 			//Preflight check
 			let preflightCheck = await preflightCheckFunction(
-			  window.baccaratContract.methods.play(userIsPlayer, proof, requestCommitment),
+			  window.baccaratContract.methods.playAsWhitelistedUser(userIsPlayer, proof, requestCommitment),
 
 			  {
 			    from: metamaskSender,
@@ -1449,7 +1628,7 @@
 			   alert("Error processing tx, check console");
 			}
 			else{
-				window.baccaratContract.methods.play(userIsPlayer, proof, requestCommitment).send({
+				window.baccaratContract.methods.playAsWhitelistedUser(userIsPlayer, proof, requestCommitment).send({
 					'from': metamaskSender,
 					'handleRevert': true,
 					'value': weiToPay
