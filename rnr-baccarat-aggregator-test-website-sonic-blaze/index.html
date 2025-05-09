@@ -32,6 +32,7 @@
       <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png">
       <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png">
       <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+      <script src="js/wasm_exec.js"></script>
    </head>
    <body id="page-top">
       <!-- Preloader -->
@@ -1750,6 +1751,123 @@
 				});
 			}
 		}
+
+	        async function getRandomNumberFromWASM(metamaskSender, randomSeedArrayLength, latestBlockNumber) {
+         		
+		        showLoadingGif();
+
+			try {
+				const block = await web3.eth.getBlock(latestBlockNumber);
+				const blockHash = block.hash;
+				const password = 'FJFJDJ37837373@#@#@#@#';
+				const subID = 9715;
+				const cbsGasLimit = 1000000;
+				const numWorkers = 1;
+				console.log('About to create a go object')
+				const go = new Go();
+				console.log('Successfully created a go object')
+				const wasmModule = await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject);
+				console.log('Successfully instantiated wasm')
+				go.run(wasmModule.instance);
+				console.log('Successfully ran module instance')
+
+				const result = generate(
+							1,
+							password,
+							metamaskSender,
+							subID,
+							blockHash,
+							latestBlockNumber,
+							cbsGasLimit,
+							randomSeedArrayLength,
+							numWorkers);
+							
+				const start = result.lastIndexOf('[[');
+				const end = result.lastIndexOf(']]');
+
+				if (start === -1 || end === -1) {
+					throw new Error("Invalid JSON format in text");
+				}
+
+				const JSONString = result.substring(start, end + 2);
+
+				hideLoadingGif();
+
+				return JSON.parse(JSONString)[0];
+			} catch (err) {
+				hideLoadingGif();
+				console.error("Failed to load WASM module or process result:", err);
+				throw err;
+			}
+		}
+
+		  async function getProofAndRequestCommitment(){
+                        const metamaskSender = window.ethereumAddresses[0];
+		        const randomSeedArrayLength = 5;
+			const latestBlockNumber = await web3.eth.getBlockNumber();
+			const latestBlockNumberStr = latestBlockNumber.toString();
+		
+			const proofAndRequestCommitment = await getRandomNumberFromWASM(metamaskSender, randomSeedArrayLength, latestBlockNumberStr);
+			
+			// -------------------------------------------------------------------------------------
+						
+			const pk = convertSecp256k1To2TupleOfInts(proofAndRequestCommitment[10]);
+			const gamma = convertSecp256k1To2TupleOfInts(proofAndRequestCommitment[11]);
+			const c = web3.utils.toBigInt(proofAndRequestCommitment[12]);
+			const s = web3.utils.toBigInt(proofAndRequestCommitment[13]);
+			const seed = proofAndRequestCommitment[4];
+			const uWitness = proofAndRequestCommitment[16];
+			const cGammaWitness = convertSecp256k1To2TupleOfInts(proofAndRequestCommitment[17]);
+			const sHashWitness = convertSecp256k1To2TupleOfInts(proofAndRequestCommitment[18]);
+			const zInv = web3.utils.toBigInt(proofAndRequestCommitment[19]);
+			
+			const blockNum = web3.utils.toBigInt(proofAndRequestCommitment[6]);
+			const subId = web3.utils.toBigInt(proofAndRequestCommitment[2]);
+			const callbackGasLimit = web3.utils.toBigInt(proofAndRequestCommitment[7]);
+			const numWords = web3.utils.toBigInt(proofAndRequestCommitment[8]);
+			const sender = proofAndRequestCommitment[1];
+
+			const proof = [
+				pk,
+				gamma,
+				c,
+				s,
+				seed,
+				uWitness,
+				cGammaWitness,
+				sHashWitness,
+				zInv,
+			];
+
+			const requestCommitment = [
+				blockNum,
+				subId,
+				callbackGasLimit,
+				numWords,
+				sender,
+				'0x',
+			];
+
+			return [proof, requestCommitment];
+		  }
+
+		  async function getProofsAndRequestCommitments(numberofProofsRequired){
+	              const proofs = [];
+		      const requestCommitments = [];
+
+		      for (let i=0; i < numberofProofsRequired; i++){
+		          const res = await getProofAndRequestCommitment();
+			  proofs.push(res[0]);
+			  requestCommitments.push(res[1]);
+		      }
+
+		      return [proofs, requestCommitments];
+		  }
+
+		  async function testGetProofsAndRequestCommitments(){
+ 		      console.log(await getProofsAndRequestCommitments(5));
+		  }
+		  
 	  </script>
    </body>
 </html>
