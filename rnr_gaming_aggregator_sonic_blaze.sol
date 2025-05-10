@@ -121,8 +121,6 @@ contract RNRGamingAggregator is ReentrancyGuard
         baccaratHandQueue[true].push(input);
     }
 
-    // add handPlayedOnBehalfOf to baccarat contract so that the player can get the correct information from the baccarat contract event emission
-
     function executeOneBatchOfTransactions(RNRBaccaratInterface.Proof[] memory proofs, RNRBaccaratInterface.RequestCommitment[] memory rcs) external onlyServer nonReentrant {
         BaccaratInput[] memory transactionsToExecute = baccaratHandQueue[true];
 
