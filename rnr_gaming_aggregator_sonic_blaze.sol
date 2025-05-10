@@ -160,7 +160,7 @@ contract Deployer {
       emit ContractDeployed(
         Create2.deploy(
             0, 
-            "RNR Gaming Aggregator v6", // SPDX-License-Identifier: MIT
+            "RNR Gaming Aggregator v6",
             type(RNRGamingAggregator).creationCode
         )
       );
