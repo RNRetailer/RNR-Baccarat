@@ -256,6 +256,8 @@ contract RNRBaccaratSonic is ReentrancyGuard
         uint256 sizeOfBetInWei,
         address userAddress
     ) private returns (Card[] memory playerCards, Card[] memory bankerCards, HandResult result){
+
+        // Implements https://www.venetianlasvegas.com/resort/casino/table-games/how-to-play-baccarat.html
         
         playerCards = new Card[](3);
         bankerCards = new Card[](3);
@@ -290,9 +292,6 @@ contract RNRBaccaratSonic is ReentrancyGuard
             playerCards[2] = deck[++lastDrawnIndex];
             playerDrewThirdCard = true;
             numberOfPlayerCardsDelt++;
-        }
-        else if (playerHandScore == 8 || playerHandScore == 9){
-            return finishGame(playerCards, bankerCards, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt, userAddress);
         }
  
         // banker draws a third card with a total less than 3, stands on 7, natural stands on 8-9
