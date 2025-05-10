@@ -1556,7 +1556,7 @@
 
 		const rnrContractAddress = '0x91B80393Fd73775f48553e4F54C23EdB114463a0';
 		const aggregatorContractAddress = '0x6c422153761daD032B9228f544Cb20Fa99C3C0c9';
-                const underlyingBaccaratContractAddress = '0xf47165AC10dDB50bd7DFa9e3AF4C442a00762C98';
+      const underlyingBaccaratContractAddress = '0xf47165AC10dDB50bd7DFa9e3AF4C442a00762C98';
 
 		const chainID = 57054;
 	  
@@ -1631,6 +1631,7 @@
 			   window.rnrContract = new window.web3.eth.Contract(rnrABI, rnrContractAddress);
 			   window.aggregatorContract = new window.web3.eth.Contract(aggregatorContractABI, aggregatorContractAddress, {handleRevert: true});
                            window.underlyingBaccaratContract = new window.web3.eth.Contract(underlyingBaccaratContractABI, underlyingBaccaratContractAddress, {handleRevert: true});
+		    
 		    }
 			else {
 				$('#connectWalletButtonHolder').css('display', '');
@@ -1678,6 +1679,8 @@
       }
 
 		async function play(){
+         const previousBlockNumber = await web3.eth.getBlockNumber();
+
 			const largestBetAllowedInWei = await window.underlyingBaccaratContract.methods.largestBetAllowedInWei().call();
 
 			const betSizeInWei = getBetSizeInWei(largestBetAllowedInWei);
@@ -1742,8 +1745,22 @@
 					'handleRevert': true,
 					'value': weiToPay
 				})
-				.on('receipt', function(receipt){
-					alert('Tx submitted successfully!');
+				.on('receipt', async function(receipt){
+					while(true){
+					   const events = await window.underlyingBaccaratContract.getPastEvents(
+					    	'allEvents', 
+					    	{
+					    		filter: {userAddress: metamaskSender}, 
+					    		fromBlock: previousBlockNumber, 
+					    		toBlock: 'latest'
+					    	}
+					   );
+
+					   if (events.length){
+					   	 alert(events[0]['returnValues'][1]);
+					       break;
+					   }
+					}
 				})
 				.on('error', function(error, receipt){
 			                console.log(error.message);
@@ -1752,7 +1769,7 @@
 			}
 		}
 
-	        function pullIntFromSecp256k1Part(part){
+	   function pullIntFromSecp256k1Part(part){
 			const closingBracketIndex = part.indexOf('}');
 			const hexString = '0x' + part.substring(0, closingBracketIndex);
 			
