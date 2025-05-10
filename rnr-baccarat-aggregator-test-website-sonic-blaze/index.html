@@ -1748,7 +1748,7 @@
 				.on('receipt', async function(receipt){
 					while(true){
 					   const events = await window.underlyingBaccaratContract.getPastEvents(
-					    	'allEvents', 
+					    	'HandLog', //previously allEvents
 					    	{
 					    		filter: {userAddress: metamaskSender}, 
 					    		fromBlock: previousBlockNumber, 
