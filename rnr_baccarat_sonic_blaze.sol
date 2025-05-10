@@ -159,9 +159,9 @@ contract RNRBaccaratSonic is ReentrancyGuard
     // Points to RANDO token
     IERC20 randoToken = IERC20(0x8BDe81Dd5e30b058b71362b50faD06e3fdACE640);
 
-    function sendPlayerSomeRandoTokens() private {
+    function sendPlayerSomeRandoTokens(address userAddress) private {
     	 uint256 tokensToSend = (10 ** 18) / 10;
-         randoToken.transfer(msg.sender, tokensToSend);
+         randoToken.transfer(userAddress, tokensToSend);
     }
 
     function playAsAggregator(
@@ -178,6 +178,11 @@ contract RNRBaccaratSonic is ReentrancyGuard
         RandomNumberRetailerInterface.Proof memory proof, 
         RandomNumberRetailerInterface.RequestCommitment memory rc
     ) external payable nonReentrant returns (Card[] memory playerCards, Card[] memory bankerCards, HandResult result){
+        require(
+            playerIsAllowedToPlayMap[msg.sender],
+            "ERROR: Player is not whitelisted. Player cannot use this smart contract."
+        );
+
         return play(userIsPlayer, proof, rc, msg.sender);
     }
     
@@ -219,10 +224,6 @@ contract RNRBaccaratSonic is ReentrancyGuard
         RandomNumberRetailerInterface.RequestCommitment memory rc,
         address userAddress
     ) private returns (Card[] memory playerCards, Card[] memory bankerCards, HandResult result){
-        require(
-            playerIsAllowedToPlayMap[msg.sender],
-            "ERROR: Player is not whitelisted. Player cannot use this smart contract."
-        );
 
         uint256 randomNumbersAvailable = RANDOM_NUMBER_RETAILER.randomNumbersAvailable();
         uint256 priceOfARandomNumberInWei = RANDOM_NUMBER_RETAILER.priceOfARandomNumberInWei();
@@ -556,13 +557,13 @@ contract RNRBaccaratSonic is ReentrancyGuard
         uint8 playerHandScore = calculateHandScore(playerCards);
         uint8 bankerHandScore = calculateHandScore(bankerCards);
         
-        uint256 payOutToMessageSenderInWei = 0;
+        uint256 payOutToUserInWei = 0;
         
         if (playerHandScore > bankerHandScore){
             result = HandResult.PLAYER_WIN;
             
             if (userIsPlayer){
-                payOutToMessageSenderInWei = sizeOfBetInWei * 2;
+                payOutToUserInWei = sizeOfBetInWei * 2;
 
                 handsWonMap[userAddress] = handsWonMap[userAddress] + 1;
             }
@@ -572,28 +573,28 @@ contract RNRBaccaratSonic is ReentrancyGuard
             
             if (!userIsPlayer){
                 // 5% tax on wins as banker
-                payOutToMessageSenderInWei = ((sizeOfBetInWei * 95) / 100) + sizeOfBetInWei;
+                payOutToUserInWei = ((sizeOfBetInWei * 95) / 100) + sizeOfBetInWei;
 
                 handsWonMap[userAddress] = handsWonMap[userAddress] + 1;
             }
         }
         else {
             result = HandResult.DRAW;
-            payOutToMessageSenderInWei = sizeOfBetInWei;
+            payOutToUserInWei = sizeOfBetInWei;
         }
         
-        if(payOutToMessageSenderInWei != 0){
+        if(payOutToUserInWei != 0){
             require(
-                payable(userAddress).send(payOutToMessageSenderInWei),
+                payable(userAddress).send(payOutToUserInWei),
                 "Error: Failed to withdraw ETH to the message sender."
             );
         }
 
-        playerPNLMap[userAddress] = playerPNLMap[userAddress] + int256(payOutToMessageSenderInWei) - int256(msg.value) + int256(RANDOM_NUMBER_RETAILER.priceOfARandomNumberInWei());
+        playerPNLMap[userAddress] = playerPNLMap[userAddress] + int256(payOutToUserInWei) - int256(msg.value) + int256(RANDOM_NUMBER_RETAILER.priceOfARandomNumberInWei());
         
         outputResultEvent(playerCards, bankerCards, result, playerHandScore, bankerHandScore, userIsPlayer, sizeOfBetInWei, numberOfPlayerCardsDelt, numberOfBankerCardsDelt, userAddress);
         
-        sendPlayerSomeRandoTokens();
+        sendPlayerSomeRandoTokens(userAddress);
 
         handsPlayedMap[userAddress] = handsPlayedMap[userAddress] + 1;
 
@@ -613,7 +614,7 @@ contract RNRBaccaratSonic is ReentrancyGuard
 
     function withdrawETHToOwner(
         uint256 weiToWithdraw
-    ) external onlyOwner {
+    ) external nonReentrant onlyOwner {
 
         require(
             address(this).balance > weiToWithdraw,
@@ -634,7 +635,7 @@ contract Deployer {
       emit ContractDeployed(
         Create2.deploy(
             0, 
-            "RNR Baccarat v0.97 Alpha", 
+            "RNR Baccarat v0.98 Alpha", 
             type(RNRBaccaratSonic).creationCode
         )
       );

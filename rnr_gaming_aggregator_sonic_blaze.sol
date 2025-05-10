@@ -62,10 +62,10 @@ contract RNRGamingAggregator is ReentrancyGuard
     address private constant serverAddress = 0xD16512fdBb90096B1f1888Cae6152177065FdA62;
     IERC20 randoToken = IERC20(0x8BDe81Dd5e30b058b71362b50faD06e3fdACE640);
     RandomNumberRetailerInterface public constant RANDOM_NUMBER_RETAILER = RandomNumberRetailerInterface(0x91B80393Fd73775f48553e4F54C23EdB114463a0);
-    RNRBaccaratInterface public constant RNR_BACCARAT = RNRBaccaratInterface(0x67955786F1594541bC8E656e9E071219Eb80Dae3);
+    RNRBaccaratInterface public constant RNR_BACCARAT = RNRBaccaratInterface(0xf47165AC10dDB50bd7DFa9e3AF4C442a00762C98);
 
-    uint8 public minimumQueueLengthToExecuteTransactions = 5;
-    uint8 public maximumLengthOfQueue = 10;
+    uint8 public minimumQueueLengthToExecuteTransactions = 1;
+    uint8 public maximumLengthOfQueue = 20;
 
     modifier onlyOwner() {
         require(
@@ -94,11 +94,6 @@ contract RNRGamingAggregator is ReentrancyGuard
     }
     
     mapping(bool => BaccaratInput[]) public baccaratHandQueue;
-
-    function sendPlayerSomeRandoTokens(address recipient) private {
-    	 uint256 tokensToSend = (10 ** 18) / 10;
-         randoToken.transfer(recipient, tokensToSend);
-    }
 
     function playBaccarat(
         bool userIsPlayer
@@ -130,11 +125,10 @@ contract RNRGamingAggregator is ReentrancyGuard
 
     function executeOneBatchOfTransactions(RNRBaccaratInterface.Proof[] memory proofs, RNRBaccaratInterface.RequestCommitment[] memory rcs) external onlyServer nonReentrant {
         BaccaratInput[] memory transactionsToExecute = baccaratHandQueue[true];
-        uint256 priceOfARandomNumberInWei = RANDOM_NUMBER_RETAILER.priceOfARandomNumberInWei();
 
         require(
             transactionsToExecute.length >= minimumQueueLengthToExecuteTransactions,
-            "Error: queue is too small to safely execute. Please wait until it is large enough."
+            "Error: queue is too small to execute. Please wait until it is large enough."
         );
 
         require(
@@ -142,36 +136,14 @@ contract RNRGamingAggregator is ReentrancyGuard
             "Error: Number of proofs does not match number of transactions to execute."
         );
 
+        require(
+            rcs.length == transactionsToExecute.length, 
+            "Error: Number of request commitments does not match number of transactions to execute."
+        );
+
         for (uint8 i = 0; i < transactionsToExecute.length; i++){
             BaccaratInput memory input = transactionsToExecute[i];
-            (RNRBaccaratInterface.Card[] memory playerCards, RNRBaccaratInterface.Card[] memory bankerCards, RNRBaccaratInterface.HandResult result) = RNR_BACCARAT.playAsAggregator{value: input.totalAmountPlayerSentInWei}(input.userIsPlayer, proofs[i], rcs[i], input.user);
-
-            uint256 sizeOfBetInWei = input.totalAmountPlayerSentInWei - priceOfARandomNumberInWei;
-            uint256 payOutToMessageSenderInWei;
-
-            if (result == RNRBaccaratInterface.HandResult.PLAYER_WIN){
-                if (input.userIsPlayer){
-                    payOutToMessageSenderInWei = sizeOfBetInWei * 2;
-                }
-            }
-            else if (result == RNRBaccaratInterface.HandResult.BANKER_WIN){
-                if (!input.userIsPlayer){
-                    // 5% tax on wins as banker
-                    payOutToMessageSenderInWei = ((sizeOfBetInWei * 95) / 100) + sizeOfBetInWei;
-                }
-            }
-            else{
-                payOutToMessageSenderInWei = sizeOfBetInWei; // it is a draw
-            }
-        
-            if(payOutToMessageSenderInWei != 0){
-                require(
-                    payable(input.user).send(payOutToMessageSenderInWei),
-                    "Error: Failed to withdraw ETH to the user."
-                );
-            }
-
-            sendPlayerSomeRandoTokens(input.user);
+            RNR_BACCARAT.playAsAggregator{value: input.totalAmountPlayerSentInWei}(input.userIsPlayer, proofs[i], rcs[i], input.user);
         }
 
         delete baccaratHandQueue[true];
@@ -190,7 +162,7 @@ contract Deployer {
       emit ContractDeployed(
         Create2.deploy(
             0, 
-            "RNR Gaming Aggregator v5", // SPDX-License-Identifier: MIT
+            "RNR Gaming Aggregator v6", // SPDX-License-Identifier: MIT
             type(RNRGamingAggregator).creationCode
         )
       );
