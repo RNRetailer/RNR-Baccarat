@@ -11,8 +11,6 @@ enum Suit{ HEART, SPADE, CLUB, DIAMOND }
 
 enum HandResult{ PLAYER_WIN, BANKER_WIN, DRAW }
 
-//event HandPlayed(address indexed player, bool userIsPlayer, HandResult result, uint256 sizeOfBetInWei, Card[] playerCards, Card[] bankerCards, uint8 playerHandScore, uint8 bankerHandScore);
-
 event HandLog(address indexed userAddress, string handLog);
 
 struct Card{
