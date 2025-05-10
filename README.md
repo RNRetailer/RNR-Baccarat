@@ -9,6 +9,14 @@ Banker pays out 2 : 1 with a 5% tax on winnings.
 
 --
 
+You get a bonus reward of one RANDO token for every hand you play.
+
+RANDO tokens can be sent to the main RNR contract in exchange for random numbers.
+
+Each RANDO token is worth ten random numbers.
+
+--
+
 The cost of one random number is added to your bet. 
 
 However, that cost is very low on blockchains with low gas cost.
