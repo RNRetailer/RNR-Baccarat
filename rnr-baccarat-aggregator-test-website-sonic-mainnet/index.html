@@ -43,6 +43,26 @@
 	      @media screen and (max-width: 479px) {
 		  #playButtonText {margin-left: -2px;}
 	      }
+
+	      :root {
+		  --percentage: 200%;  
+		  --width: 80vw;
+	      }
+
+	      @keyframes shimmer {
+		  from { background-position: var(--percentage) 0; }
+		  to { background-position: calc(var(--percentage) * -1) 0; }
+	      }
+
+	      .shimmer {
+		  animation: shimmer 2s linear infinite;
+		  background: #f0f0f0 linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.2) 25%, transparent 50%);
+		  background-size: var(--percentage) 100%;
+		  height: 80vh;
+		  width: var(--width);
+		  font-size: 3rem;
+		  padding: 10px;
+	      }
       </style>
    </head>
    <body id="page-top">
