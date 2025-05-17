@@ -1764,7 +1764,12 @@
 					   );
 
 					   if (events.length){
-					       alert(events[0]['returnValues'][1]);
+
+					       const betSizeInWeiString = String(betSizeInWei);
+					       const betSizeInEth = web3.utils.fromWei(betSizeInWei, 'ether');
+					       const betSizeInEthString = `${betSizeInEth} S`;
+				
+					       alert(events[0]['returnValues'][1].replace(betSizeInWeiString, betSizeInEthString));
 					       break;
 					   }
 					}
