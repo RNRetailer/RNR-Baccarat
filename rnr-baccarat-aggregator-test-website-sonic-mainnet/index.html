@@ -1686,7 +1686,12 @@
       }
 
 		async function play(){
-         const previousBlockNumber = await web3.eth.getBlockNumber();
+                        if (!document.getElementById('notInUsOrCanadaCheckbox').checked){
+				alert("You must assert that you are not in the US or Canada to play a hand. Thanks!");
+				return;
+			}
+			
+                        const previousBlockNumber = await web3.eth.getBlockNumber();
 
 			const largestBetAllowedInWei = await window.underlyingBaccaratContract.methods.largestBetAllowedInWei().call();
 
