@@ -33,7 +33,13 @@
       <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png">
       <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
       <script src="js/wasm_exec.js"></script>
-      <style>#playButton:focus {background-color: #F19F1F;}</style>
+      <style>
+	      #playButton:focus {background-color: #F19F1F;}
+
+	      @media screen and (min-width: 480px) {
+		  #playButton {font-size: 110% !important;}
+	      }
+      </style>
    </head>
    <body id="page-top">
       <!-- Preloader -->
