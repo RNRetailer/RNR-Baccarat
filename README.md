@@ -47,6 +47,8 @@ Sonic Blaze (for VIP players only, whitelist required):
 
 https://rnretailer.github.io/RNR-Baccarat/rnr-baccarat-test-website-sonic-blaze/
 
+--
+
 Sonic Blaze Faucet (get your test Sonic here):
 
 https://testnet.soniclabs.com/account
