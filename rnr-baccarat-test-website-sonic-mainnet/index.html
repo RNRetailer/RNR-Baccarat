@@ -1637,8 +1637,29 @@
 					const betSizeInWeiString = String(betSizeInWei);
                                         const betSizeInEth = web3.utils.fromWei(betSizeInWei, 'ether');
 					const betSizeInEthString = `${betSizeInEth} S`;
+
+					let resultString = web3.utils.hexToAscii(receipt['logs'][1]['data'].slice(130)).replaceAll('\x00', '').replace(betSizeInWeiString, betSizeInEthString);
+
+                                        let userPlayingAs;
+					let userNotPlayingAs;
 					
-					alert(web3.utils.hexToAscii(receipt['logs'][1]['data'].slice(130)).replaceAll('\x00', '').replace(betSizeInWeiString, betSizeInEthString));
+                                        if (userIsPlayer){
+					    userPlayingAs = "Player";
+					    userNotPlayingAs = "Banker";
+					}
+					else{
+					    userPlayingAs = "Banker";
+					    userNotPlayingAs = "Player";
+					}
+					
+					if (resultString.includes(`${usersChoice} wins`)){
+					    resultString = "User wins!\r\n" + resultString;
+					}
+					else if (resultString.includes(`${userNotPlayingAs} wins`)){
+				            resultString = "User loses!\r\n" + resultString;
+					}
+					
+					alert(resultString);
 				})
 				.on('error', function(error, receipt){
 					 console.log(error.message);
