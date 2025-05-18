@@ -9,7 +9,7 @@ Banker pays out 2 : 1 with a 5% tax on winnings.
 
 --
 
-You get a bonus reward of one RANDO token for every hand you play.
+You get a bonus reward of 0.1 RANDO tokens for every hand you play.
 
 RANDO tokens can be sent to the main RNR contract in exchange for random numbers.
 
@@ -25,6 +25,18 @@ The maximum wager is one Sonic per hand.
 
 --
 
+Sonic Mainnet Gaming Aggregator (whitelisted account not required!)
+
+https://rnretailer.github.io/RNR-Baccarat/rnr-baccarat-aggregator-test-website-sonic-mainnet
+
+--
+
+Sonic Mainnet (for VIP players only, whitelist required):
+
+https://rnretailer.github.io/RNR-Baccarat/rnr-baccarat-test-website-sonic-mainnet/
+
+--
+
 Sonic Blaze Gaming Aggregator (whitelisted account not required!)
 
 https://rnretailer.github.io/RNR-Baccarat/rnr-baccarat-aggregator-test-website-sonic-blaze/
@@ -34,8 +46,6 @@ https://rnretailer.github.io/RNR-Baccarat/rnr-baccarat-aggregator-test-website-s
 Sonic Blaze (for VIP players only, whitelist required):
 
 https://rnretailer.github.io/RNR-Baccarat/rnr-baccarat-test-website-sonic-blaze/
-
---
 
 Sonic Blaze Faucet (get your test Sonic here):
 
